@@ -1,0 +1,33 @@
+{
+  "name": "tel",
+  "version-string": "1.0.0",
+  "builtin-baseline": "f5c5b8ddbb88dec7eed4a5ac54c36d1c64d2d29d",
+  "dependencies": [
+    {
+      "name": "assimp"
+    },
+    {
+      "name": "glew",
+      "version>=": "2.2.0#3"
+    },
+    {
+      "name": "glfw3",
+      "version>=": "3.3.8#2"
+    },
+    {
+      "name": "glm",
+      "version>=": "0.9.9.8#2"
+    },
+    {
+      "name": "opengl",
+      "version>=": "2022-12-04#3"
+    },
+    {
+      "name": "cmakerc"
+    },
+    {
+      "name": "sol2",
+      "version>=": "3.3.0"
+    }
+  ]
+}
