@@ -88,7 +88,26 @@ struct ProgramOptions {
 };
 
 class Program {
-  public:
+public:
+    Program(const Program& other) = delete;
+
+    Program(Program&& other) noexcept
+        : program{other.program},
+          details{std::move(other.details)} {
+        other.program = 0;
+    }
+
+    Program& operator=(const Program& other) = delete;
+
+    Program& operator=(Program&& other) noexcept {
+        if (this == &other)
+            return *this;
+        program = other.program;
+        other.program = 0;
+        details = std::move(other.details);
+        return *this;
+    }
+
     static std::expected<Program, ShaderCompilationError> create(const Shader<ShaderType::Vertex>& vertexShader,
                                                                  const Shader<ShaderType::Fragment>& fragmentShader,
                                                                  const ProgramOptions& programOptions) {
