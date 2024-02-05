@@ -13,7 +13,6 @@ find_package(CMakeRC CONFIG REQUIRED)
 find_package(assimp REQUIRED)
 add_library(hazor
         src/Mesh.hpp
-        src/ObjectPool.hpp
         src/Util.hpp
         src/Scene.hpp
         src/Transform.hpp
