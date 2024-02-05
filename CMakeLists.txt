@@ -11,7 +11,7 @@ find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
 find_package(CMakeRC CONFIG REQUIRED)
 find_package(assimp REQUIRED)
-add_executable(hazor src/main.cpp
+add_library(hazor
         src/Mesh.hpp
         src/ObjectPool.hpp
         src/Util.hpp
