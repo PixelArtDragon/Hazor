@@ -146,16 +146,10 @@ class Rendering {
     }
 
     void stream(const GPUMesh& gpuMesh, const Mesh& mesh) {
-        // using Indices = std::index_sequence_for<decltype(GPUMesh::attachments)>;
-        auto func = [&]<size_t index>(this auto self) {
-            using Attachment =
-                typename std::remove_reference_t<std::tuple_element_t<index, decltype(gpuMesh.attachments)>>::Type;
-            stream<Attachment>(std::get<index>(gpuMesh.attachments), std::get<index>(mesh.vertex_attributes()));
-            if constexpr (index + 1 < std::tuple_size_v<decltype(gpuMesh.attachments)>) {
-                self.template operator()<index + 1>();
-            }
+        auto func = [&]<size_t... indices>(std::index_sequence<indices...>) {
+            (stream(std::get<indices>(gpuMesh.attachments), std::span(std::get<indices>(mesh.vertex_attributes()))), ...);
         };
-        func.operator()<0>();
+        func(std::make_index_sequence<std::tuple_size_v<decltype(gpuMesh.attachments)>>{});
     }
 
     void stream(const ElementBuffer& elementBuffer, std::span<const ElementBuffer::Index> data) {
@@ -251,27 +245,32 @@ class Rendering {
         meshObject.elementBuffer = std::move(elementBuffer);
     }
 
+    template<size_t index, typename T>
+    void link(GPUMesh& meshObject, VertexBuffer<T>&& buffer) {
+        bind(buffer);
+        glVertexAttribPointer(index, 1, gl_enum<T>(), false, sizeof(T), nullptr);
+        glEnableVertexAttribArray(index);
+        std::get<index>(meshObject.attachments) = std::move(buffer);
+    }
+
+    template<size_t index, glm::length_t length, typename T>
+    void link(GPUMesh& meshObject, VertexBuffer<glm::vec<length, T>>&& buffer) {
+        bind(buffer);
+        glVertexAttribPointer(index, length, gl_enum<T>(), false, sizeof(glm::vec<length, T>), nullptr);
+        glEnableVertexAttribArray(index);
+        std::get<index>(meshObject.attachments) = std::move(buffer);
+    }
+
     template <typename... Attachments>
     void link_attachments(GPUMesh& meshObject, VertexBuffer<Attachments>&&... buffers) {
         assert(meshObject.vertexArray.underlying() != 0);
         bind(meshObject.vertexArray);
-        decltype(auto) buffers_tuple = std::tie(buffers...);
 
-        auto func = [&]<int index>(this auto self) -> void {
-            using Attachment =
-                typename std::remove_reference_t<std::tuple_element_t<index, decltype(buffers_tuple)>>::Type;
-            auto& buffer = std::get<index>(buffers_tuple);
-            bind(buffer);
-            glVertexAttribPointer(index, Attachment::length(), gl_enum<typename Attachment::value_type>(), false,
-                                  sizeof(Attachment), nullptr);
-            glEnableVertexAttribArray(index);
-            std::get<index>(meshObject.attachments) = std::move(buffer);
-            if constexpr (index + 1 < sizeof...(buffers)) {
-                self.template operator()<index + 1>();
-            }
+        auto func = [&]<size_t... indices>(std::index_sequence<indices...>) {
+            (link<indices>(meshObject, std::move(buffers)), ...);
         };
 
-        func.template operator()<0>();
+        func(std::index_sequence_for<Attachments...>{});
     }
 };
 } // namespace tel
