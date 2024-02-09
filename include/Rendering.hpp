@@ -78,17 +78,10 @@ class Rendering {
     }
 
     MeshHandle load_mesh(const Mesh& mesh) {
-        auto positionBuffer = VertexBuffer<glm::vec3>::create();
-        auto normalBuffer = VertexBuffer<glm::vec3>::create();
-        auto triangleBuffer = ElementBuffer::create();
-        GPUMesh meshObject{};
+        GPUMesh meshObject = create_with_buffers();
         meshObject.numIndices = mesh.triangles.size();
-        meshObject.vertexArray = VertexArray::create();
-
-        link_element_array(meshObject, std::move(triangleBuffer));
-        link_attachments(meshObject, std::move(positionBuffer), std::move(normalBuffer));
-        stream(meshObject, mesh);
         stream(meshObject.elementBuffer, mesh.triangles);
+        stream(meshObject, mesh);
         return lookups.get_lookup<GPUMesh>().add(std::move(meshObject));
     }
 
@@ -239,38 +232,37 @@ class Rendering {
         }
     }
 
-    void link_element_array(GPUMesh& meshObject, ElementBuffer&& elementBuffer) {
-        force_binding(meshObject.vertexArray);
-        force_binding(elementBuffer);
-        meshObject.elementBuffer = std::move(elementBuffer);
+    GPUMesh create_with_buffers() {
+        GPUMesh mesh{};
+        mesh.vertexArray = VertexArray::create();
+        mesh.elementBuffer = ElementBuffer::create();
+        bind(mesh.vertexArray);
+        for_each(mesh.attachments, []<typename T>(T& attachment) { attachment = T::create(); });
+        link_attachments(mesh);
+        return mesh;
     }
 
-    template<size_t index, typename T>
-    void link(GPUMesh& meshObject, VertexBuffer<T>&& buffer) {
+
+
+    template<size_t index, typename Attachment>
+    void create_attribute(const VertexBuffer<Attachment>& buffer) {
         bind(buffer);
-        glVertexAttribPointer(index, 1, gl_enum<T>(), false, sizeof(T), nullptr);
+        glVertexAttribPointer(index, 1, gl_enum<Attachment>(), false, sizeof(Attachment), nullptr);
         glEnableVertexAttribArray(index);
-        std::get<index>(meshObject.attachments) = std::move(buffer);
     }
 
-    template<size_t index, glm::length_t length, typename T>
-    void link(GPUMesh& meshObject, VertexBuffer<glm::vec<length, T>>&& buffer) {
+    template<size_t index, typename T, int length>
+    void create_attribute(const VertexBuffer<glm::vec<length, T>>& buffer) {
         bind(buffer);
         glVertexAttribPointer(index, length, gl_enum<T>(), false, sizeof(glm::vec<length, T>), nullptr);
         glEnableVertexAttribArray(index);
-        std::get<index>(meshObject.attachments) = std::move(buffer);
     }
 
-    template <typename... Attachments>
-    void link_attachments(GPUMesh& meshObject, VertexBuffer<Attachments>&&... buffers) {
-        assert(meshObject.vertexArray.underlying() != 0);
-        bind(meshObject.vertexArray);
-
-        auto func = [&]<size_t... indices>(std::index_sequence<indices...>) {
-            (link<indices>(meshObject, std::move(buffers)), ...);
-        };
-
-        func(std::index_sequence_for<Attachments...>{});
+    void link_attachments(GPUMesh& mesh) {
+        bind(mesh.vertexArray);
+        for_each_i(mesh.attachments, [&]<size_t i>(auto& vertexBuffer) {
+            create_attribute<i>(vertexBuffer);
+        });
     }
 };
 } // namespace tel

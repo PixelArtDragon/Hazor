@@ -34,6 +34,22 @@ none_of(UnaryFunction&& p,
                       std::forward<std::tuple<Types...>>(t));
 }
 
+template<typename Tuple, typename Func>
+void for_each(Tuple&& tuple, Func&& func) {
+    auto inner_func = [&]<size_t... indices>(std::index_sequence<indices...>) {
+        (std::forward<Func>(func)(std::get<indices>(std::forward<Tuple>(tuple))), ...);
+    };
+    inner_func(std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
+}
+
+template<typename Tuple, typename Func>
+void for_each_i(Tuple&& tuple, Func&& func) {
+    auto inner_func = [&]<size_t... indices>(std::index_sequence<indices...>) {
+        (std::forward<Func>(func).operator()<indices>(std::get<indices>(std::forward<Tuple>(tuple))), ...);
+    };
+    inner_func(std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
+}
+
 template <typename... LHS, typename... RHS, typename BinaryFunc>
 std::tuple<std::invoke_result_t<BinaryFunc, LHS, RHS>...> element_wise(std::tuple<LHS...> lhs, std::tuple<RHS...> rhs,
                                                                        BinaryFunc func) {
