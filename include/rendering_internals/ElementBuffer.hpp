@@ -10,17 +10,11 @@ class ElementBuffer {
 
     ElementBuffer(const ElementBuffer& other) = delete;
 
-    ElementBuffer(ElementBuffer&& other) noexcept : ebo{other.ebo} { other.ebo = 0; }
+    ElementBuffer(ElementBuffer&& other) noexcept = default;
 
     ElementBuffer& operator=(const ElementBuffer& other) = delete;
 
-    ElementBuffer& operator=(ElementBuffer&& other) noexcept {
-        if (this == &other)
-            return *this;
-        ebo = other.ebo;
-        other.ebo = 0;
-        return *this;
-    }
+    ElementBuffer& operator=(ElementBuffer&& other) noexcept = default;
 
     ~ElementBuffer() { glDeleteBuffers(1, &ebo); }
 
@@ -37,6 +31,6 @@ class ElementBuffer {
 
     explicit ElementBuffer(GLuint ebo) : ebo(ebo) {}
 
-    GLuint ebo = 0;
+    Moving<GLuint, 0, EngagedMoveAssignBehavior::Assert> ebo;
 };
 } // namespace tel

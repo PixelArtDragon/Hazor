@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Moving.hpp"
+
 #include <GL/glew.h>
 
 namespace tel {
@@ -13,27 +15,23 @@ class VertexArray {
         return VertexArray{vao};
     }
 
-    VertexArray(VertexArray&& other) noexcept : vao{other.vao} { other.vao = 0; }
+    VertexArray(const VertexArray&) = delete;
+
+    VertexArray(VertexArray&& other) noexcept = default;
 
     VertexArray& operator=(const VertexArray& other) = delete;
 
-    VertexArray& operator=(VertexArray&& other) noexcept {
-        if (this == &other)
-            return *this;
-        vao = other.vao;
-        other.vao = 0;
-        return *this;
-    }
+    VertexArray& operator=(VertexArray&& other) noexcept = default;
 
     [[nodiscard]] GLuint underlying() const { return vao; }
 
-    ~VertexArray() { glDeleteVertexArrays(1, &vao); }
+    ~VertexArray() { glDeleteVertexArrays(1, &vao.value()); }
 
   private:
     friend class Rendering;
 
     explicit VertexArray(GLuint vao) : vao(vao) {}
 
-    GLuint vao = 0;
+    Moving<GLuint, 0, EngagedMoveAssignBehavior::Assert> vao = 0;
 };
 } // namespace tel

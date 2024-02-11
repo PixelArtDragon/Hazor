@@ -7,6 +7,8 @@
 #include <utility>
 #include <vector>
 
+#include "Moving.hpp"
+
 namespace tel {
 enum class ShaderType { Vertex, Fragment };
 
@@ -39,19 +41,11 @@ class Shader {
 
     Shader(const Shader& other) = delete;
 
-    Shader(Shader&& other) noexcept : shader(other.shader) { other.shader = 0; }
+    Shader(Shader&& other) noexcept = default;
 
     Shader& operator=(const Shader& other) = delete;
 
-    Shader& operator=(Shader&& other) noexcept {
-        if (this == &other) {
-            return *this;
-        }
-        assert(this->shader != 0);
-        this->shader = other.shader;
-        other.shader = 0;
-        return *this;
-    }
+    Shader& operator=(Shader&& other) = default;
 
     ~Shader() { glDeleteShader(shader); }
 
@@ -60,7 +54,7 @@ class Shader {
   private:
     explicit Shader(GLuint shader) : shader(shader) {}
 
-    GLuint shader;
+    Moving<GLuint, 0, EngagedMoveAssignBehavior::Assert> shader;
 
     constexpr static GLenum shader_type() {
         switch (type) {
@@ -91,22 +85,10 @@ class Program {
 public:
     Program(const Program& other) = delete;
 
-    Program(Program&& other) noexcept
-        : program{other.program},
-          details{std::move(other.details)} {
-        other.program = 0;
-    }
-
+    Program(Program&& other) noexcept = default;
     Program& operator=(const Program& other) = delete;
 
-    Program& operator=(Program&& other) noexcept {
-        if (this == &other)
-            return *this;
-        program = other.program;
-        other.program = 0;
-        details = std::move(other.details);
-        return *this;
-    }
+    Program& operator=(Program&& other) noexcept = default;
 
     static std::expected<Program, ShaderCompilationError> create(const Shader<ShaderType::Vertex>& vertexShader,
                                                                  const Shader<ShaderType::Fragment>& fragmentShader,
@@ -153,7 +135,7 @@ public:
         std::vector<ProgramVariable> uniformLocations;
     };
 
-    GLuint program;
+    Moving<GLuint, 0, EngagedMoveAssignBehavior::Assert> program;
     ProgramDetails details;
 
     static std::vector<ProgramVariable> extract_attributes(GLuint program);

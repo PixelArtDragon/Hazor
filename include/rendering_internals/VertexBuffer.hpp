@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Moving.hpp"
+
 namespace tel {
 template <typename DataType>
 class VertexBuffer {
@@ -17,25 +19,17 @@ class VertexBuffer {
     VertexBuffer(const VertexBuffer&) = delete;
     VertexBuffer& operator=(const VertexBuffer&) = delete;
 
-    VertexBuffer(VertexBuffer&& other) noexcept : vbo(other.vbo) { other.vbo = 0; }
+    VertexBuffer(VertexBuffer&& other) noexcept = default;
 
-    VertexBuffer& operator=(VertexBuffer&& other) noexcept {
-        if (this == &other) {
-            return *this;
-        }
-        assert(this->vbo == 0 && "Assignment to a VertexBufferArray that is engaged is not allowed");
-        this->vbo = other.vbo;
-        other.vbo = 0;
-        return *this;
-    }
+    VertexBuffer& operator=(VertexBuffer&& other) noexcept = default;
 
-    ~VertexBuffer() { glDeleteBuffers(1, &vbo); }
+    ~VertexBuffer() { glDeleteBuffers(1, &vbo.value()); }
 
     [[nodiscard]] GLuint underlying() const { return vbo; }
 
   private:
     explicit VertexBuffer(GLuint vbo) : vbo(vbo) {}
 
-    GLuint vbo = 0;
+    Moving<GLuint, 0, EngagedMoveAssignBehavior::Assert> vbo;
 };
 } // namespace tel

@@ -30,7 +30,8 @@ add_library(hazor
         include/Renderable.hpp
         include/Camera.hpp
         include/MeshLoading.hpp
-        src/MeshLoading.cpp)
+        src/MeshLoading.cpp
+        include/Moving.hpp)
 target_link_libraries(hazor PUBLIC sol2)
 target_link_libraries(hazor PUBLIC ${LUA_LIBRARIES})
 target_link_libraries(hazor PUBLIC glfw)

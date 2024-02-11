@@ -1,5 +1,6 @@
 #pragma once
-#include "..\Initializations.hpp"
+#include "Initializations.hpp"
+#include "Moving.hpp"
 
 #include <GL/glew.h>
 #include <algorithm>
@@ -26,20 +27,11 @@ class Framebuffer {
     Framebuffer(const Framebuffer&) = delete;
     Framebuffer& operator=(const Framebuffer&) = delete;
 
-    Framebuffer(Framebuffer&& other) noexcept : fbo(other.fbo), options(std::move(other.options)) { other.fbo = 0; }
+    Framebuffer(Framebuffer&& other) noexcept = default;
 
-    Framebuffer& operator=(Framebuffer&& other) noexcept {
-        if (this == &other) {
-            return *this;
-        }
-        assert(this->fbo == 0 && "Assignment to a Framebuffer that is engaged is not allowed");
-        this->fbo = other.fbo;
-        other.fbo = 0;
-        this->options = std::move(other.options);
-        return *this;
-    }
+    Framebuffer& operator=(Framebuffer&& other) = default;
 
-    ~Framebuffer() { glDeleteFramebuffers(1, &fbo); }
+    ~Framebuffer() { glDeleteFramebuffers(1, &fbo.value()); }
 
     [[nodiscard]] GLuint underlying() const { return fbo; }
 
@@ -48,7 +40,7 @@ class Framebuffer {
     [[nodiscard]] int height() const { return options.height; }
 
   private:
-    GLuint fbo = 0;
+    Moving<GLuint, 0, EngagedMoveAssignBehavior::Assert> fbo = 0;
     FramebufferOptions options;
 
     Framebuffer(GLuint fbo, const FramebufferOptions& options) : fbo(fbo), options(options) {}
