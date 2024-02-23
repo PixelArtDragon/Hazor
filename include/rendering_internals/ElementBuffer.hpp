@@ -16,7 +16,7 @@ class ElementBuffer {
 
     ElementBuffer& operator=(ElementBuffer&& other) noexcept = default;
 
-    ~ElementBuffer() { glDeleteBuffers(1, &ebo); }
+    ~ElementBuffer() { glDeleteBuffers(1, &ebo.value()); }
 
     static ElementBuffer create() {
         GLuint ebo{};

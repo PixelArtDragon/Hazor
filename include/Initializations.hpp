@@ -1,7 +1,8 @@
 #pragma once
 
 namespace tel {
-template <typename T> class MustInit {
+template <typename T>
+class MustInit {
   public:
     explicit(false) MustInit(const T& value) : underlyingValue(value) {}
 

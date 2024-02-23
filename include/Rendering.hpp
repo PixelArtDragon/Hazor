@@ -140,7 +140,8 @@ class Rendering {
 
     void stream(const GPUMesh& gpuMesh, const Mesh& mesh) {
         auto func = [&]<size_t... indices>(std::index_sequence<indices...>) {
-            (stream(std::get<indices>(gpuMesh.attachments), std::span(std::get<indices>(mesh.vertex_attributes()))), ...);
+            (stream(std::get<indices>(gpuMesh.attachments), std::span(std::get<indices>(mesh.vertex_attributes()))),
+             ...);
         };
         func(std::make_index_sequence<std::tuple_size_v<decltype(gpuMesh.attachments)>>{});
     }
@@ -242,16 +243,14 @@ class Rendering {
         return mesh;
     }
 
-
-
-    template<size_t index, typename Attachment>
+    template <size_t index, typename Attachment>
     void create_attribute(const VertexBuffer<Attachment>& buffer) {
         bind(buffer);
         glVertexAttribPointer(index, 1, gl_enum<Attachment>(), false, sizeof(Attachment), nullptr);
         glEnableVertexAttribArray(index);
     }
 
-    template<size_t index, typename T, int length>
+    template <size_t index, typename T, int length>
     void create_attribute(const VertexBuffer<glm::vec<length, T>>& buffer) {
         bind(buffer);
         glVertexAttribPointer(index, length, gl_enum<T>(), false, sizeof(glm::vec<length, T>), nullptr);
@@ -260,9 +259,7 @@ class Rendering {
 
     void link_attachments(GPUMesh& mesh) {
         bind(mesh.vertexArray);
-        for_each_i(mesh.attachments, [&]<size_t i>(auto& vertexBuffer) {
-            create_attribute<i>(vertexBuffer);
-        });
+        for_each_i(mesh.attachments, [&]<size_t i>(auto& vertexBuffer) { create_attribute<i>(vertexBuffer); });
     }
 };
 } // namespace tel

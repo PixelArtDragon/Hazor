@@ -82,7 +82,7 @@ struct ProgramOptions {
 };
 
 class Program {
-public:
+  public:
     Program(const Program& other) = delete;
 
     Program(Program&& other) noexcept = default;

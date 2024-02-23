@@ -1,36 +1,32 @@
 #pragma once
-#include <utility>
 #include <cassert>
+#include <utility>
 
 namespace tel {
-enum class EngagedMoveAssignBehavior {
-    Assert,
-    Discard
-};
-template <typename T, T defaultState = T{}, EngagedMoveAssignBehavior moveAssignBehavior = EngagedMoveAssignBehavior::Discard>
+enum class EngagedMoveAssignBehavior { Assert, Discard };
+
+template <typename T, T defaultState = T{},
+          EngagedMoveAssignBehavior moveAssignBehavior = EngagedMoveAssignBehavior::Discard>
 class Moving {
-public:
+  public:
     Moving() : val(defaultState) {}
 
     template <typename... Args>
-    Moving(Args&&... args)
-        : val(std::forward<Args>(args)...) {
-    }
+    Moving(Args&&... args) : val(std::forward<Args>(args)...) {}
 
     Moving(const Moving&) = delete;
 
     Moving& operator=(const Moving&) = delete;
 
-    Moving(Moving&& other) noexcept(std::is_nothrow_copy_constructible_v<T>)
-        : val(other.val) {
+    Moving(Moving&& other) noexcept(std::is_nothrow_copy_constructible_v<T>) : val(other.val) {
         other.val = defaultState;
     }
 
     Moving& operator=(Moving&& other) noexcept(std::is_nothrow_move_assignable_v<T>) {
-        if(this == &other) {
+        if (this == &other) {
             return *this;
         }
-        if constexpr(moveAssignBehavior == EngagedMoveAssignBehavior::Assert) {
+        if constexpr (moveAssignBehavior == EngagedMoveAssignBehavior::Assert) {
             assert(val == defaultState);
         }
         this->val = std::move(other.val);
@@ -38,25 +34,17 @@ public:
         return *this;
     }
 
-    operator T&() {
-        return val;
-    }
+    operator T&() { return val; }
 
-    operator const T&() const {
-        return val;
-    }
+    operator const T&() const { return val; }
 
-    const T& value() const {
-        return val;
-    }
+    const T& value() const { return val; }
 
-    T& value() {
-        return val;
-    }
+    T& value() { return val; }
 
     ~Moving() = default;
 
-private:
+  private:
     T val;
 };
-}
+} // namespace tel
